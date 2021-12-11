@@ -1,14 +1,15 @@
 // Instantiate the Classes
-const ui = new UI().
-      cocktail = new CocktailAPI();
+const ui = new UI(),
+      cocktail = new CocktailAPI(),
+      cocktailDB = new CocktailDB();
 
 
 // Create the Event Listener
 function eventListeners() {
     //Document Ready
-    document.addEventListener(`DOMContentLoaded`, documentReady);
+    document.addEventListener('DOMContentLoaded', documentReady);
       
-    //add event Listeners when form is submitted
+    //Add event Listener when form is submitted
     const searchForm = document.querySelector('#search-form');
     if(searchForm) {
         searchForm.addEventListener('submit', getCocktails);
@@ -50,8 +51,14 @@ function getCocktails(e) {
               case 'name':
                     serverResponse = cocktail.getDrinksByName( searchTerm );
                     break;
-                case 'ingredient':
+              case 'ingredient':
                     serverResponse = cocktail.getDrinksByIngredient( searchTerm );
+                    break;
+              case 'category':
+                    serverResponse = cocktail.getDrinksByCategory( searchTerm );
+                    break;
+              case 'alcohol':
+                    serverResponse = cocktail.getDrinksByAlcohol( searchTerm );
                     break;
           }
 
@@ -59,8 +66,7 @@ function getCocktails(e) {
 
         //Query by the name of the drink
         
-        cocktail.getDrinksByName( searchTerm )
-        .then(cocktails => {
+        serverResponse.then(cocktails => {
               if(cocktails.cocktails.drinks === null) {
                   // Nothing exists
                   ui.printMessage('There\'re no results, try a different term ', 'danger');
@@ -70,7 +76,7 @@ function getCocktails(e) {
                       ui.displayDrinksWithIngredients( cocktails.cocktails.drinks );
                   } else {
                       // Display without Ingredients (category, alcohol, ingredient)
-                      ui.displayDrink(cocktails.cocktails.drinks);
+                      ui.displayDrinks(cocktails.cocktails.drinks);
                   }
               }
         })
@@ -85,19 +91,84 @@ function resultsDelegation(e) {
     if(e.target.classList.contains('get-recipe')) {
         cocktail.getSingleRecipe( e.target.dataset.id )
              .then(recipe => {
-                 // Display Single recipe into a modal
-                 ui.displaySingleRecipe(recipe.recipe.drinks(0));
-             })
+                 // Displays Single recipe into a modal
+                 ui.displaySingleRecipe(recipe.recipe.drinks[0] );
+            
+                })
     }
+
+    // when favorite btn is clicked
+    if(e.target.classList.contains('favorite-btn')) {
+        if(e.target.classList.contains('is-favorite') ) {
+            // remove the class
+            e.target.classList.remove('is-favorite')
+            e.target.textContent = '+';
+
+            // Remove from Storage
+            cocktailDB.removeFromDB( e.target.dataset.id );
+        } else {
+            // Add the class
+            e.target.classList.add('is-favorite')
+            e.target.textContent = '-';
+
+            // Get info
+            const cardBody = e.target.parentElement;
+
+            const drinkInfo = {
+                id: e.target.dataset.id,
+                name: cardBody.querySelector('.card-title').textContent,
+                image: cardBody.querySelector('.card-img-top').src
+            }
+
+
+            // console.log(drinkInfo);
+            // Add into the storage
+            cocktailDB.saveIntoDB(drinkInfo);
+        }
 
 }
+
 //Document Ready 
-function documentReady(){
+function documentReady()  {
+    // Display on load the favorites from storage
+    ui.isFavorites();
 
     //Select the search category select
-    const searchCategory = document.querySelector(`.search-category`);
-    if(searchCategory){
-        ui.printCategories();
+    const searchCategory = document.querySelector('.search-category');
+    if(searchCategory)  {
+        ui.displayCategories();
+        }
 
-    }
+        // When favorites page
+        const favoritesTable = document.querySelector('#favorites');
+        if(favoritesTable) {
+            // Get the favorites from storage and display them
+            const drinks = cocktailDB.getFromDB();
+            ui.displayFavorites(drinks);
+
+            // when view or delete are clicked
+
+            favoritesTable.addEventListener('click', (e) => {
+                e.preventDefault();
+
+                // Delegation
+                if(e.target.classList.contains('get-recipe')) {
+                    cocktail.getSingleRecipe( e.target.dataset.id )
+                    .then(recipe => {
+                        // Displays Single recipe into a modal
+                        ui.displaySingleRecipe(recipe.recipe.drinks[0] );
+                   
+                 })
+            }
+            // When remove button is clciked in favorites
+            if(e.target.classList.contains('remove-recipe')) {
+                // Remove from DOM
+                ui.removeFavorite( e.target.parentElement.parentElement );
+
+                // Remove from the local storage
+                cocktailDB.removeFromDB( e.target.dataset.id );
+              }
+          })
+     }
+  }
 }
