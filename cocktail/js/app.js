@@ -4,10 +4,12 @@ const ui = new UI(),
       cocktailDB = new CocktailDB();
 
 
-// Create the Event Listener
+// Create the Event Listeners
 function eventListeners() {
     //Document Ready
-    document.addEventListener('DOMContentLoaded', documentReady);
+        document.addEventListener('DOMContentLoaded', (event) => {
+            console.log('DOM fully loaded and parsed');
+        });
       
     //Add event Listener when form is submitted
     const searchForm = document.querySelector('#search-form');
@@ -25,7 +27,7 @@ function eventListeners() {
 
 eventListeners();
 
-
+  
 
 // Get cocktails function
 function getCocktails(e) {
@@ -73,7 +75,7 @@ function getCocktails(e) {
               } else {
                   if(type === 'name') {
                       // Display with ingredients
-                      ui.displayDrinksWithIngredients( cocktails.cocktails.drinks );
+                      ui.displayDrinksWithIngredients(cocktails.cocktails.drinks);
                   } else {
                       // Display without Ingredients (category, alcohol, ingredient)
                       ui.displayDrinks(cocktails.cocktails.drinks);
@@ -101,14 +103,14 @@ function resultsDelegation(e) {
     if(e.target.classList.contains('favorite-btn')) {
         if(e.target.classList.contains('is-favorite') ) {
             // remove the class
-            e.target.classList.remove('is-favorite')
+            e.target.classList.remove('is-favorite');
             e.target.textContent = '+';
 
             // Remove from Storage
             cocktailDB.removeFromDB( e.target.dataset.id );
         } else {
             // Add the class
-            e.target.classList.add('is-favorite')
+            e.target.classList.add('is-favorite');
             e.target.textContent = '-';
 
             // Get info
@@ -131,7 +133,7 @@ function resultsDelegation(e) {
 //Document Ready 
 function documentReady()  {
     // Display on load the favorites from storage
-    ui.isFavorites();
+    ui.isFavorite();
 
     //Select the search category select
     const searchCategory = document.querySelector('.search-category');
